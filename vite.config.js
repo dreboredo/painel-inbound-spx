@@ -11,7 +11,4 @@ export default defineConfig({
       'react-dom': path.resolve('./node_modules/react-dom'),
     },
   },
-  build: {
-    cssMinify: 'esbuild' // Desativa o LightningCSS e resolve o erro do Tailwind/CSS Nesting
-  }
 })
