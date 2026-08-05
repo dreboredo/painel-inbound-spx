@@ -24,6 +24,22 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastSync, setLastSync] = useState('');
 
+  // Estados para os filtros de Checkbox (todos marcados por padrão)
+  const [selectedStatus, setSelectedStatus] = useState({
+    'Em fila': true,
+    'Sendo docado': true,
+    'Docado': true,
+    'Finalizado': true
+  });
+
+  // Alterna o estado de um checkbox
+  const handleStatusToggle = (status) => {
+    setSelectedStatus(prev => ({
+      ...prev,
+      [status]: !prev[status]
+    }));
+  };
+
   // Busca os dados da tabela inbound_trips
   const fetchTrips = async () => {
     try {
@@ -79,9 +95,24 @@ export default function App() {
     };
   }, []);
 
-  // Filtro de busca
+  // Contagem geral por status para exibir nos checkboxes
+  const countsByStatus = trips.reduce((acc, trip) => {
+    const st = trip.status || 'Em fila';
+    acc[st] = (acc[st] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Filtro de busca + Filtro de Checkboxes de Status
   const filteredTrips = trips.filter((trip) => {
     const search = searchTerm.toLowerCase();
+    const tripStatus = trip.status || 'Em fila';
+
+    // 1. Verifica se o status está marcado no filtro de checkbox
+    if (!selectedStatus[tripStatus]) {
+      return false;
+    }
+
+    // 2. Aplica o termo de busca textual
     return (
       (trip.origin && trip.origin.toLowerCase().includes(search)) ||
       (trip.vehicle_plate && trip.vehicle_plate.toLowerCase().includes(search)) ||
@@ -127,7 +158,7 @@ export default function App() {
             <button
               onClick={fetchTrips}
               disabled={loading}
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-2 rounded-xl text-xs font-black shadow-md shadow-orange-500/20 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl text-xs font-black shadow-md shadow-orange-500/20 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Atualizar</span>
@@ -138,13 +169,85 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* INDICADORES */}
+        {/* BARRA DE FILTROS POR CHECKBOX (IGUAL SPX) */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
+            <span className="text-slate-400 font-extrabold uppercase tracking-wider text-[11px] mr-1">
+              Filtros de Status:
+            </span>
+
+            {/* Checkbox: Em fila */}
+            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedStatus['Em fila']}
+                onChange={() => handleStatusToggle('Em fila')}
+                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                Em fila: <strong className="text-slate-900">{countsByStatus['Em fila'] || 0}</strong>
+              </span>
+            </label>
+
+            <span className="text-slate-200">|</span>
+
+            {/* Checkbox: Sendo docado */}
+            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedStatus['Sendo docado']}
+                onChange={() => handleStatusToggle('Sendo docado')}
+                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                Sendo docado: <strong className="text-slate-900">{countsByStatus['Sendo docado'] || 0}</strong>
+              </span>
+            </label>
+
+            <span className="text-slate-200">|</span>
+
+            {/* Checkbox: Docado */}
+            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedStatus['Docado']}
+                onChange={() => handleStatusToggle('Docado')}
+                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                Docado: <strong className="text-slate-900">{countsByStatus['Docado'] || 0}</strong>
+              </span>
+            </label>
+
+            <span className="text-slate-200">|</span>
+
+            {/* Checkbox: Finalizado */}
+            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedStatus['Finalizado']}
+                onChange={() => handleStatusToggle('Finalizado')}
+                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                Finalizado: <strong className="text-slate-900">{countsByStatus['Finalizado'] || 0}</strong>
+              </span>
+            </label>
+          </div>
+
+          <div className="text-xs font-bold text-slate-400">
+            {lastSync ? `Última sincronização: ${lastSync}` : ''}
+          </div>
+        </div>
+
+        {/* INDICADOR DE EXIBIÇÃO */}
         <div className="flex justify-between items-center text-xs font-bold text-slate-400 mb-4 px-1">
           <span className="bg-slate-200/60 text-slate-600 px-3 py-1 rounded-md">
-            Exibindo {filteredTrips.length} veículos
-          </span>
-          <span>
-            {lastSync ? `Última sincronização: ${lastSync}` : ''}
+            Exibindo {filteredTrips.length} de {trips.length} veículos
           </span>
         </div>
 
@@ -152,7 +255,7 @@ export default function App() {
         <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTrips.length === 0 && !loading ? (
             <div className="col-span-full text-center py-12 text-slate-400 font-medium">
-              Nenhuma viagem encontrada no momento.
+              Nenhuma viagem encontrada com os filtros selecionados.
             </div>
           ) : (
             filteredTrips.map((trip) => (
