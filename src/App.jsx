@@ -192,7 +192,7 @@ export default function App() {
                       onChange={() => handleStatusToggle(item.label)}
                       className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
                     />
-                    {/* Ícone V (Check) Branco feito em SVG SVG sobreposto */}
+                    {/* Ícone V (Check) Branco feito em SVG sobreposto */}
                     <svg
                       className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
                       fill="none"
@@ -206,7 +206,10 @@ export default function App() {
 
                   <span className="flex items-center gap-1.5">
                     <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
-                    {item.label}: <strong className="text-slate-900">{countsByStatus[item.label] || 0}</strong>
+                    {item.label}:{' '}
+                    <strong className="text-sm font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                      {countsByStatus[item.label] || 0}
+                    </strong>
                   </span>
                 </label>
 
