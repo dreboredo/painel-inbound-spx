@@ -182,7 +182,7 @@ export default function App() {
                 type="checkbox"
                 checked={selectedStatus['Em fila']}
                 onChange={() => handleStatusToggle('Em fila')}
-                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
               />
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
@@ -198,7 +198,7 @@ export default function App() {
                 type="checkbox"
                 checked={selectedStatus['Sendo docado']}
                 onChange={() => handleStatusToggle('Sendo docado')}
-                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
               />
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
@@ -214,7 +214,7 @@ export default function App() {
                 type="checkbox"
                 checked={selectedStatus['Docado']}
                 onChange={() => handleStatusToggle('Docado')}
-                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
               />
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
@@ -230,7 +230,7 @@ export default function App() {
                 type="checkbox"
                 checked={selectedStatus['Finalizado']}
                 onChange={() => handleStatusToggle('Finalizado')}
-                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
               />
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
