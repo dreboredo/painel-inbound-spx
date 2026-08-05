@@ -169,74 +169,50 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* BARRA DE FILTROS POR CHECKBOX (IGUAL SPX) */}
+        {/* BARRA DE FILTROS POR CHECKBOX CUSTOMIZADO */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
             <span className="text-slate-400 font-extrabold uppercase tracking-wider text-[11px] mr-1">
               Filtros de Status:
             </span>
 
-            {/* Checkbox: Em fila */}
-            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
-              <input
-                type="checkbox"
-                checked={selectedStatus['Em fila']}
-                onChange={() => handleStatusToggle('Em fila')}
-                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
-              />
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                Em fila: <strong className="text-slate-900">{countsByStatus['Em fila'] || 0}</strong>
-              </span>
-            </label>
+            {[
+              { label: 'Em fila', color: 'bg-amber-500' },
+              { label: 'Sendo docado', color: 'bg-indigo-500' },
+              { label: 'Docado', color: 'bg-blue-500' },
+              { label: 'Finalizado', color: 'bg-emerald-500' },
+            ].map((item, index, array) => (
+              <React.Fragment key={item.label}>
+                <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
+                  {/* Caixa do Checkbox Customizada */}
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStatus[item.label]}
+                      onChange={() => handleStatusToggle(item.label)}
+                      className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
+                    />
+                    {/* Ícone V (Check) Branco feito em SVG SVG sobreposto */}
+                    <svg
+                      className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
 
-            <span className="text-slate-200">|</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
+                    {item.label}: <strong className="text-slate-900">{countsByStatus[item.label] || 0}</strong>
+                  </span>
+                </label>
 
-            {/* Checkbox: Sendo docado */}
-            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
-              <input
-                type="checkbox"
-                checked={selectedStatus['Sendo docado']}
-                onChange={() => handleStatusToggle('Sendo docado')}
-                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
-              />
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
-                Sendo docado: <strong className="text-slate-900">{countsByStatus['Sendo docado'] || 0}</strong>
-              </span>
-            </label>
-
-            <span className="text-slate-200">|</span>
-
-            {/* Checkbox: Docado */}
-            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
-              <input
-                type="checkbox"
-                checked={selectedStatus['Docado']}
-                onChange={() => handleStatusToggle('Docado')}
-                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
-              />
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                Docado: <strong className="text-slate-900">{countsByStatus['Docado'] || 0}</strong>
-              </span>
-            </label>
-
-            <span className="text-slate-200">|</span>
-
-            {/* Checkbox: Finalizado */}
-            <label className="flex items-center gap-2 cursor-pointer select-none hover:text-orange-600 transition-colors">
-              <input
-                type="checkbox"
-                checked={selectedStatus['Finalizado']}
-                onChange={() => handleStatusToggle('Finalizado')}
-                className="w-4 h-4 rounded cursor-pointer bg-orange-500 accent-orange-500 text-white focus:ring-orange-500 border-none"
-              />
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                Finalizado: <strong className="text-slate-900">{countsByStatus['Finalizado'] || 0}</strong>
-              </span>
-            </label>
+                {index < array.length - 1 && <span className="text-slate-200">|</span>}
+              </React.Fragment>
+            ))}
           </div>
 
           <div className="text-xs font-bold text-slate-400">
