@@ -10,7 +10,13 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Definição de prioridade de exibição dos status (Menor número = Aparece primeiro)
+// Lista fixa de todas as docas
+const ALL_DOCKS = [
+  'INT01', 'INT02', 'INT03', 'INT04',
+  'EXT.INB01', 'EXT.INB02', 'EXT.INB03', 'EXT.INB04'
+];
+
+// Definição de prioridade de exibição dos status
 const STATUS_PRIORITY = {
   'Em fila': 1,
   'Sendo docado': 2,
@@ -24,7 +30,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastSync, setLastSync] = useState('');
 
-  // Estados para os filtros de Checkbox de Status (todos marcados por padrão)
+  // Estados para os filtros de Checkbox de Status
   const [selectedStatus, setSelectedStatus] = useState({
     'Em fila': true,
     'Sendo docado': true,
@@ -32,29 +38,20 @@ export default function App() {
     'Finalizado': true
   });
 
-  // Estados para os filtros de Checkbox de Modalidade (FM e LH marcados por padrão)
+  // Estados para os filtros de Checkbox de Modalidade
   const [selectedModality, setSelectedModality] = useState({
     'FM': true,
     'LH': true
   });
 
-  // Alterna o estado de um checkbox de status
   const handleStatusToggle = (status) => {
-    setSelectedStatus(prev => ({
-      ...prev,
-      [status]: !prev[status]
-    }));
+    setSelectedStatus(prev => ({ ...prev, [status]: !prev[status] }));
   };
 
-  // Alterna o estado de um checkbox de modalidade
   const handleModalityToggle = (modality) => {
-    setSelectedModality(prev => ({
-      ...prev,
-      [modality]: !prev[modality]
-    }));
+    setSelectedModality(prev => ({ ...prev, [modality]: !prev[modality] }));
   };
 
-  // Busca os dados da tabela inbound_trips
   const fetchTrips = async () => {
     try {
       setLoading(true);
@@ -64,9 +61,6 @@ export default function App() {
 
       if (error) throw error;
 
-      // Ordenação customizada:
-      // 1º: Por grupo de Status (Em fila -> Sendo docado -> Docado -> Finalizado)
-      // 2º: Por Posição na Fila / Ordem de Chegada
       const sortedData = (data || []).sort((a, b) => {
         const priorityA = STATUS_PRIORITY[a.status] || 99;
         const priorityB = STATUS_PRIORITY[b.status] || 99;
@@ -90,12 +84,10 @@ export default function App() {
   useEffect(() => {
     fetchTrips();
 
-    // Auto-atualização a cada 3 minutos (180.000 milissegundos)
     const interval = setInterval(() => {
       fetchTrips();
     }, 3 * 60 * 1000);
 
-    // Inscrição Realtime para atualizar a interface instantaneamente
     const channel = supabase
       .channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inbound_trips' }, () => {
@@ -109,43 +101,42 @@ export default function App() {
     };
   }, []);
 
-  // Contagem geral por status para exibir nos checkboxes
+  // Mapeamento das docas atualmente ocupadas por veículos ativos
+  const occupiedDocks = trips.reduce((acc, trip) => {
+    if (trip.dock_number && trip.status !== 'Finalizado') {
+      acc.add(trip.dock_number.trim());
+    }
+    return acc;
+  }, new Set());
+
+  // Contagens
   const countsByStatus = trips.reduce((acc, trip) => {
     const st = trip.status || 'Em fila';
     acc[st] = (acc[st] || 0) + 1;
     return acc;
   }, {});
 
-  // Contagem geral por modalidade para exibir nos checkboxes
   const countsByModality = trips.reduce((acc, trip) => {
     const mod = trip.modality || 'LH';
     acc[mod] = (acc[mod] || 0) + 1;
     return acc;
   }, {});
 
-  // Filtro de busca + Filtro de Checkboxes de Status e Modalidade
   const filteredTrips = trips.filter((trip) => {
     const search = searchTerm.toLowerCase();
     const tripStatus = trip.status || 'Em fila';
     const tripModality = trip.modality || 'LH';
 
-    // 1. Verifica se o status está marcado no filtro
-    if (!selectedStatus[tripStatus]) {
-      return false;
-    }
+    if (!selectedStatus[tripStatus]) return false;
+    if (!selectedModality[tripModality]) return false;
 
-    // 2. Verifica se a modalidade está marcada no filtro
-    if (!selectedModality[tripModality]) {
-      return false;
-    }
-
-    // 3. Aplica o termo de busca textual
     return (
       (trip.origin && trip.origin.toLowerCase().includes(search)) ||
       (trip.vehicle_plate && trip.vehicle_plate.toLowerCase().includes(search)) ||
       (trip.driver_name && trip.driver_name.toLowerCase().includes(search)) ||
       (trip.status && trip.status.toLowerCase().includes(search)) ||
-      (trip.lt_number && trip.lt_number.toLowerCase().includes(search))
+      (trip.lt_number && trip.lt_number.toLowerCase().includes(search)) ||
+      (trip.dock_number && trip.dock_number.toLowerCase().includes(search))
     );
   });
 
@@ -176,7 +167,7 @@ export default function App() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Buscar Fila, Placa, Motorista..."
+                  placeholder="Buscar Fila, Placa, Motorista, Doca..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
@@ -204,7 +195,7 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* BARRA DE FILTROS POR CHECKBOX CUSTOMIZADO */}
+        {/* BARRA DE FILTROS */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap items-center justify-between gap-4">
           
           {/* Filtros de Status */}
@@ -298,11 +289,44 @@ export default function App() {
           </div>
         </div>
 
-        {/* INDICADOR DE EXIBIÇÃO */}
-        <div className="flex justify-between items-center text-xs font-bold text-slate-400 mb-4 px-1">
-          <span className="bg-slate-200/60 text-slate-600 px-3 py-1 rounded-md">
+        {/* INDICADOR DE EXIBIÇÃO + PAINEL DE DOCAS LADO A LADO */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 px-1">
+          <span className="bg-slate-200/60 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold shrink-0">
             Exibindo {filteredTrips.length} de {trips.length} veículos
           </span>
+
+          {/* LISTA DE DOCAS - LUZ VERDE (OCUPADA) vs CINZA FOSCO (LIVRE) */}
+          <div className="flex flex-wrap items-center gap-2 bg-white px-4 py-1.5 rounded-xl shadow-sm border border-slate-100">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mr-1">
+              Docas:
+            </span>
+
+            {ALL_DOCKS.map((dock) => {
+              const isOccupied = occupiedDocks.has(dock);
+              return (
+                <div
+                  key={dock}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                    isOccupied
+                      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30 shadow-sm shadow-emerald-500/10'
+                      : 'bg-slate-100 text-slate-400 border-slate-200'
+                  }`}
+                >
+                  {/* Luz Indicadora Liga/Desliga */}
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isOccupied
+                        ? 'bg-emerald-400 shadow-[0_0_8px_#10b981] animate-pulse'
+                        : 'bg-slate-400'
+                    }`}
+                  ></span>
+                  <span className={isOccupied ? 'font-black' : 'font-semibold'}>
+                    {dock}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* GRID DE CARDS */}
@@ -449,7 +473,11 @@ export default function App() {
                     ) : (
                       <AlertCircle className="w-3.5 h-3.5" />
                     )}
-                    <span>{trip.status || 'Em fila'}</span>
+                    <span>
+                      {trip.status === 'Docado' && trip.dock_number
+                        ? `${trip.dock_number}`
+                        : (trip.status || 'Em fila')}
+                    </span>
                   </div>
                 </div>
               </div>
