@@ -445,15 +445,26 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Total de Pacotes e Status */}
+                {/* Total de Pacotes, Doca e Status */}
                 <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      TOTAL DE PACOTES:
-                    </span>
-                    <span className="text-base font-black text-slate-900">
-                      {(trip.total_packages || 0).toLocaleString('pt-BR')} pcs
-                    </span>
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        TOTAL DE PACOTES:
+                      </span>
+                      <span className="text-base font-black text-slate-900">
+                        {(trip.total_packages || 0).toLocaleString('pt-BR')} pcs
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        DOCA:
+                      </span>
+                      <span className="text-base font-black text-slate-900">
+                        {trip.dock_number || '-'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* ESTILOS DE STATUS DIFERENCIADOS */}
@@ -474,9 +485,7 @@ export default function App() {
                       <AlertCircle className="w-3.5 h-3.5" />
                     )}
                     <span>
-                      {trip.status === 'Docado' && trip.dock_number
-                        ? `${trip.dock_number}`
-                        : (trip.status || 'Em fila')}
+                      {trip.status || 'Em fila'}
                     </span>
                   </div>
                 </div>
