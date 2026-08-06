@@ -30,7 +30,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastSync, setLastSync] = useState('');
 
-  // Estados para os filtros de Checkbox de Status
+  // Estados para os filtros de Status
   const [selectedStatus, setSelectedStatus] = useState({
     'Em fila': true,
     'Sendo docado': true,
@@ -38,7 +38,7 @@ export default function App() {
     'Finalizado': true
   });
 
-  // Estados para os filtros de Checkbox de Modalidade
+  // Estados para os filtros de Modalidade
   const [selectedModality, setSelectedModality] = useState({
     'FM': true,
     'LH': true
@@ -109,19 +109,31 @@ export default function App() {
     return acc;
   }, new Set());
 
-  // Contagens
-  const countsByStatus = trips.reduce((acc, trip) => {
-    const st = trip.status || 'Em fila';
-    acc[st] = (acc[st] || 0) + 1;
+  // ==============================================================================
+  // CONTAGENS DINÂMICAS E CRUZADAS DOS FILTROS
+  // ==============================================================================
+  
+  // Contagens de Status levando em consideração as Modalidades marcadas
+  const dynamicCountsByStatus = trips.reduce((acc, trip) => {
+    const tripModality = trip.modality || 'LH';
+    if (selectedModality[tripModality]) {
+      const st = trip.status || 'Em fila';
+      acc[st] = (acc[st] || 0) + 1;
+    }
     return acc;
   }, {});
 
-  const countsByModality = trips.reduce((acc, trip) => {
-    const mod = trip.modality || 'LH';
-    acc[mod] = (acc[mod] || 0) + 1;
+  // Contagens de Modalidade levando em consideração os Status marcados
+  const dynamicCountsByModality = trips.reduce((acc, trip) => {
+    const tripStatus = trip.status || 'Em fila';
+    if (selectedStatus[tripStatus]) {
+      const mod = trip.modality || 'LH';
+      acc[mod] = (acc[mod] || 0) + 1;
+    }
     return acc;
   }, {});
 
+  // Filtragem final para exibição dos cards
   const filteredTrips = trips.filter((trip) => {
     const search = searchTerm.toLowerCase();
     const tripStatus = trip.status || 'Em fila';
@@ -155,7 +167,7 @@ export default function App() {
               <h1 className="text-2xl font-black tracking-tight text-slate-800 leading-tight">
                 Painel Inbound - SPX
               </h1>
-              <p className="text-xs font-semibold text-slate-400">
+              <p className="text-xs font-bold text-slate-400">
                 Monitoramento de Fila e Descarregamento em Tempo Real
               </p>
             </div>
@@ -170,7 +182,7 @@ export default function App() {
                   placeholder="Buscar Fila, Placa, Motorista, Doca..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                 />
               </div>
 
@@ -185,7 +197,7 @@ export default function App() {
             </div>
 
             {lastSync && (
-              <span className="text-[10px] font-semibold text-slate-400">
+              <span className="text-[10px] font-bold text-slate-400">
                 Última sincronização: {lastSync}
               </span>
             )}
@@ -195,107 +207,128 @@ export default function App() {
 
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* BARRA DE FILTROS */}
+        {/* BARRA DE FILTROS DINÂMICOS */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap items-center justify-between gap-4">
           
           {/* Filtros de Status */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
-            <span className="text-slate-400 font-extrabold uppercase tracking-wider text-[11px] mr-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-slate-500 uppercase tracking-wider text-xs font-extrabold mr-1">
               Filtros de Status:
             </span>
 
             {[
-              { label: 'Em fila', color: 'bg-amber-500' },
-              { label: 'Sendo docado', color: 'bg-indigo-500' },
-              { label: 'Docado', color: 'bg-blue-500' },
-              { label: 'Finalizado', color: 'bg-emerald-500' },
-            ].map((item, index, array) => (
-              <React.Fragment key={item.label}>
-                <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedStatus[item.label]}
-                      onChange={() => handleStatusToggle(item.label)}
-                      className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
-                    />
-                    <svg
-                      className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3.5"
-                      viewBox="0 0 24 24"
+              'Em fila',
+              'Sendo docado',
+              'Docado',
+              'Finalizado',
+            ].map((status, index, array) => {
+              const isActive = selectedStatus[status];
+              return (
+                <React.Fragment key={status}>
+                  <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
+                    <div className="relative flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={() => handleStatusToggle(status)}
+                        className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
+                      />
+                      <svg
+                        className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3.5"
+                        viewBox="0 0 24 24"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+
+                    <span
+                      className={`flex items-center gap-1.5 uppercase text-xs transition-all ${
+                        isActive
+                          ? 'font-black text-slate-900'
+                          : 'font-semibold text-slate-400'
+                      }`}
                     >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
+                      {status}:{' '}
+                      <strong
+                        className={`text-xs px-1.5 py-0.5 rounded-md transition-all ${
+                          isActive
+                            ? 'font-black text-slate-900 bg-slate-100'
+                            : 'font-semibold text-slate-400 bg-slate-100/60'
+                        }`}
+                      >
+                        {dynamicCountsByStatus[status] || 0}
+                      </strong>
+                    </span>
+                  </label>
 
-                  <span className="flex items-center gap-1.5">
-                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
-                    {item.label}:{' '}
-                    <strong className="text-sm font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                      {countsByStatus[item.label] || 0}
-                    </strong>
-                  </span>
-                </label>
-
-                {index < array.length - 1 && <span className="text-slate-200">|</span>}
-              </React.Fragment>
-            ))}
+                  {index < array.length - 1 && <span className="text-slate-200">|</span>}
+                </React.Fragment>
+              );
+            })}
           </div>
 
           {/* Filtros de Modalidade */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
-            <span className="text-slate-400 font-extrabold uppercase tracking-wider text-[11px] mr-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-slate-500 uppercase tracking-wider text-xs font-extrabold mr-1">
               Modalidade:
             </span>
 
-            {[
-              { label: 'FM', color: 'bg-red-500' },
-              { label: 'LH', color: 'bg-blue-500' },
-            ].map((item, index, array) => (
-              <React.Fragment key={item.label}>
-                <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedModality[item.label]}
-                      onChange={() => handleModalityToggle(item.label)}
-                      className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
-                    />
-                    <svg
-                      className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
+            {/* BOTÃO FM */}
+            <button
+              type="button"
+              onClick={() => handleModalityToggle('FM')}
+              className={`px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer flex items-center gap-2 active:scale-95 ${
+                selectedModality['FM']
+                  ? 'bg-red-50 border-red-300 text-red-700 shadow-sm font-black'
+                  : 'bg-slate-100 border-slate-200 text-slate-400 font-normal'
+              }`}
+            >
+              <span>FM</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-xs ${
+                  selectedModality['FM']
+                    ? 'bg-red-100 text-red-800 font-black'
+                    : 'bg-slate-200/60 text-slate-400 font-normal'
+                }`}
+              >
+                {dynamicCountsByModality['FM'] || 0}
+              </span>
+            </button>
 
-                  <span className="flex items-center gap-1.5">
-                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
-                    {item.label}:{' '}
-                    <strong className="text-sm font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                      {countsByModality[item.label] || 0}
-                    </strong>
-                  </span>
-                </label>
-
-                {index < array.length - 1 && <span className="text-slate-200">|</span>}
-              </React.Fragment>
-            ))}
+            {/* BOTÃO LH */}
+            <button
+              type="button"
+              onClick={() => handleModalityToggle('LH')}
+              className={`px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer flex items-center gap-2 active:scale-95 ${
+                selectedModality['LH']
+                  ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-sm font-black'
+                  : 'bg-slate-100 border-slate-200 text-slate-400 font-normal'
+              }`}
+            >
+              <span>LH</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-xs ${
+                  selectedModality['LH']
+                    ? 'bg-blue-100 text-blue-800 font-black'
+                    : 'bg-slate-200/60 text-slate-400 font-normal'
+                }`}
+              >
+                {dynamicCountsByModality['LH'] || 0}
+              </span>
+            </button>
           </div>
         </div>
 
-        {/* INDICADOR DE EXIBIÇÃO + PAINEL DE DOCAS LADO A LADO */}
+        {/* INDICADOR DE EXIBIÇÃO + PAINEL DE DOCAS */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4 px-1">
           <span className="bg-slate-200/60 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold shrink-0">
             Exibindo {filteredTrips.length} de {trips.length} veículos
           </span>
 
-          {/* LISTA DE DOCAS - LUZ VERDE (OCUPADA) vs CINZA FOSCO (LIVRE) */}
+          {/* LISTA DE DOCAS */}
           <div className="flex flex-wrap items-center gap-2 bg-white px-4 py-1.5 rounded-xl shadow-sm border border-slate-100">
             <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mr-1">
               Docas:
@@ -306,13 +339,12 @@ export default function App() {
               return (
                 <div
                   key={dock}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-all border ${
                     isOccupied
-                      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30 shadow-sm shadow-emerald-500/10'
-                      : 'bg-slate-100 text-slate-400 border-slate-200'
+                      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30 shadow-sm shadow-emerald-500/10 font-black'
+                      : 'bg-slate-100 text-slate-400 border-slate-200 font-normal'
                   }`}
                 >
-                  {/* Luz Indicadora Liga/Desliga */}
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${
                       isOccupied
@@ -320,9 +352,7 @@ export default function App() {
                         : 'bg-slate-400'
                     }`}
                   ></span>
-                  <span className={isOccupied ? 'font-black' : 'font-semibold'}>
-                    {dock}
-                  </span>
+                  <span>{dock}</span>
                 </div>
               );
             })}
@@ -345,10 +375,10 @@ export default function App() {
                   {/* Posição na Fila e Tempo de Espera */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">
+                      <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase">
                         POSIÇÃO NA FILA:
                       </span>
-                      <span className="text-[10px] font-extrabold text-slate-400 tracking-wider uppercase text-right">
+                      <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase text-right">
                         TEMPO DE ESPERA:
                       </span>
                     </div>
@@ -357,7 +387,7 @@ export default function App() {
                       <h2 className="text-2xl font-black text-slate-900 leading-none">
                         {trip.origin || '-'}
                       </h2>
-                      <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 font-semibold px-3 py-1.5 rounded-full text-xs">
+                      <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-full text-xs">
                         <Clock className="w-3.5 h-3.5" />
                         <span>{trip.waiting_time || '00:00'}</span>
                       </div>
