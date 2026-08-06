@@ -30,7 +30,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastSync, setLastSync] = useState('');
 
-  // Estados para os filtros de Status
+  // Estados para os filtros de Checkbox de Status
   const [selectedStatus, setSelectedStatus] = useState({
     'Em fila': true,
     'Sendo docado': true,
@@ -38,7 +38,7 @@ export default function App() {
     'Finalizado': true
   });
 
-  // Estados para os filtros de Modalidade
+  // Estados para os filtros de Checkbox de Modalidade
   const [selectedModality, setSelectedModality] = useState({
     'FM': true,
     'LH': true
@@ -109,14 +109,13 @@ export default function App() {
     return acc;
   }, new Set());
 
-  // Contagens por Status
+  // Contagens
   const countsByStatus = trips.reduce((acc, trip) => {
     const st = trip.status || 'Em fila';
     acc[st] = (acc[st] || 0) + 1;
     return acc;
   }, {});
 
-  // Contagens por Modalidade
   const countsByModality = trips.reduce((acc, trip) => {
     const mod = trip.modality || 'LH';
     acc[mod] = (acc[mod] || 0) + 1;
@@ -206,18 +205,18 @@ export default function App() {
             </span>
 
             {[
-              'Em fila',
-              'Sendo docado',
-              'Docado',
-              'Finalizado',
-            ].map((status, index, array) => (
-              <React.Fragment key={status}>
+              { label: 'Em fila', color: 'bg-amber-500' },
+              { label: 'Sendo docado', color: 'bg-indigo-500' },
+              { label: 'Docado', color: 'bg-blue-500' },
+              { label: 'Finalizado', color: 'bg-emerald-500' },
+            ].map((item, index, array) => (
+              <React.Fragment key={item.label}>
                 <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
                   <div className="relative flex items-center justify-center">
                     <input
                       type="checkbox"
-                      checked={selectedStatus[status]}
-                      onChange={() => handleStatusToggle(status)}
+                      checked={selectedStatus[item.label]}
+                      onChange={() => handleStatusToggle(item.label)}
                       className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
                     />
                     <svg
@@ -231,10 +230,11 @@ export default function App() {
                     </svg>
                   </div>
 
-                  <span className="flex items-center gap-1.5 uppercase font-bold text-slate-700">
-                    {status}:{' '}
+                  <span className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
+                    {item.label}:{' '}
                     <strong className="text-sm font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                      {countsByStatus[status] || 0}
+                      {countsByStatus[item.label] || 0}
                     </strong>
                   </span>
                 </label>
@@ -245,54 +245,47 @@ export default function App() {
           </div>
 
           {/* Filtros de Modalidade */}
-          <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
             <span className="text-slate-400 font-extrabold uppercase tracking-wider text-[11px] mr-1">
               Modalidade:
             </span>
 
-            {/* BOTÃO FM */}
-            <button
-              type="button"
-              onClick={() => handleModalityToggle('FM')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                selectedModality['FM']
-                  ? 'bg-red-50 border-red-300 text-red-700 shadow-sm'
-                  : 'bg-slate-100 border-slate-200 text-slate-400'
-              }`}
-            >
-              <span>FM</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-md text-[11px] font-black ${
-                  selectedModality['FM']
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-slate-200 text-slate-500'
-                }`}
-              >
-                {countsByModality['FM'] || 0}
-              </span>
-            </button>
+            {[
+              { label: 'FM', color: 'bg-red-500' },
+              { label: 'LH', color: 'bg-blue-500' },
+            ].map((item, index, array) => (
+              <React.Fragment key={item.label}>
+                <label className="flex items-center gap-2 cursor-pointer select-none hover:opacity-80 transition-opacity">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedModality[item.label]}
+                      onChange={() => handleModalityToggle(item.label)}
+                      className="peer appearance-none w-4 h-4 bg-slate-200 checked:bg-orange-500 rounded cursor-pointer transition-colors focus:outline-none"
+                    />
+                    <svg
+                      className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
 
-            {/* BOTÃO LH */}
-            <button
-              type="button"
-              onClick={() => handleModalityToggle('LH')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                selectedModality['LH']
-                  ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-sm'
-                  : 'bg-slate-100 border-slate-200 text-slate-400'
-              }`}
-            >
-              <span>LH</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-md text-[11px] font-black ${
-                  selectedModality['LH']
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-slate-200 text-slate-500'
-                }`}
-              >
-                {countsByModality['LH'] || 0}
-              </span>
-            </button>
+                  <span className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} inline-block`}></span>
+                    {item.label}:{' '}
+                    <strong className="text-sm font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                      {countsByModality[item.label] || 0}
+                    </strong>
+                  </span>
+                </label>
+
+                {index < array.length - 1 && <span className="text-slate-200">|</span>}
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
