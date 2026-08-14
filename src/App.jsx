@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Clock, CheckCircle2, AlertCircle, RefreshCw, Search, Truck } from 'lucide-react';
+import { Clock, CheckCircle2, AlertCircle, RefreshCw, Search, Truck, PackageCheck } from 'lucide-react';
 
 // ==============================================================================
 // CONFIGURAÇÃO SUPABASE
@@ -110,6 +110,27 @@ export default function App() {
   }, new Set());
 
   // ==============================================================================
+  // CÁLCULO DO TOTAL RECEBIDO (STATUS = FINALIZADO) FILTRADO POR MODALIDADE
+  // ==============================================================================
+  const totalReceivedPackages = trips.reduce((acc, trip) => {
+    if (trip.status === 'Finalizado') {
+      const tripModality = trip.modality || 'LH';
+      if (selectedModality[tripModality]) {
+        return acc + (Number(trip.total_packages) || 0);
+      }
+    }
+    return acc;
+  }, 0);
+
+  // Texto descritivo/badge para indicar quais modalidades estão somadas no Card
+  const getReceivedLabel = () => {
+    if (selectedModality['FM'] && selectedModality['LH']) return 'FM + LH';
+    if (selectedModality['FM']) return 'FM';
+    if (selectedModality['LH']) return 'LH';
+    return 'NENHUM';
+  };
+
+  // ==============================================================================
   // CONTAGENS DINÂMICAS E CRUZADAS DOS FILTROS
   // ==============================================================================
   
@@ -156,9 +177,10 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 font-sans pb-12">
       
       {/* CABEÇALHO */}
-      <header className="bg-white border-b-4 border-orange-500 shadow-sm px-6 py-5 mb-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-start justify-between gap-4">
+      <header className="bg-white border-b-4 border-orange-500 shadow-sm px-6 py-4 mb-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           
+          {/* TÍTULO E ÍCONE */}
           <div className="flex items-center gap-3">
             <div className="bg-orange-500 text-white p-2.5 rounded-xl shadow-md">
               <Truck size={24} />
@@ -173,6 +195,37 @@ export default function App() {
             </div>
           </div>
 
+          {/* CARD DE TOTAL RECEBIDO (CENTRO / ESPAÇO MARCADO) */}
+          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-4 py-2 rounded-2xl shadow-inner">
+            <div className="bg-emerald-500 text-white p-2 rounded-xl shadow-sm">
+              <PackageCheck size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  Total Recebido
+                </span>
+                <span
+                  className={`text-[9px] font-black px-1.5 py-0.2 rounded ${
+                    getReceivedLabel() === 'FM'
+                      ? 'bg-red-100 text-red-700'
+                      : getReceivedLabel() === 'LH'
+                      ? 'bg-blue-100 text-blue-700'
+                      : getReceivedLabel() === 'FM + LH'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-200 text-slate-500'
+                  }`}
+                >
+                  {getReceivedLabel()}
+                </span>
+              </div>
+              <div className="text-lg font-black text-slate-800 leading-tight">
+                {totalReceivedPackages.toLocaleString('pt-BR')} <span className="text-xs font-bold text-slate-500">pcs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* BUSCA, REFRESH E ÚLTIMA SYNC */}
           <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-3 w-full md:w-auto h-8">
               <div className="relative flex-1 md:w-64">
@@ -202,6 +255,7 @@ export default function App() {
               </span>
             )}
           </div>
+
         </div>
       </header>
 
@@ -384,7 +438,7 @@ export default function App() {
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-black text-slate-900 leading-none">
+                      <h2 className="text-2xl font-bold text-slate-900 leading-none">
                         {trip.origin || '-'}
                       </h2>
                       <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-full text-xs">
@@ -400,7 +454,7 @@ export default function App() {
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                         PLACA:
                       </span>
-                      <span className="font-extrabold text-slate-800 text-xs block mt-1 truncate">
+                      <span className="font-medium text-slate-800 text-xs block mt-1 truncate">
                         {trip.vehicle_plate || '-'}
                       </span>
                     </div>
@@ -410,7 +464,7 @@ export default function App() {
                         MOTORISTA:
                       </span>
                       <span 
-                        className="font-extrabold text-slate-800 text-xs block mt-1 truncate" 
+                        className="font-medium text-slate-800 text-xs block mt-1 truncate" 
                         title={trip.driver_name || '-'}
                       >
                         {trip.driver_name || '-'}
@@ -421,7 +475,7 @@ export default function App() {
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                         NÚMERO DA LT:
                       </span>
-                      <span className="font-extrabold text-slate-800 text-xs block mt-1 truncate">
+                      <span className="font-medium text-slate-800 text-xs block mt-1 truncate">
                         {trip.modality === 'FM' ? '-' : (trip.lt_number || '-')}
                       </span>
                     </div>
@@ -443,7 +497,7 @@ export default function App() {
                       >
                         MODALIDADE
                       </span>
-                      <span className="font-extrabold text-xs leading-none">
+                      <span className="font-bold text-sm leading-none">
                         {trip.modality || 'LH'}
                       </span>
                     </div>
@@ -452,7 +506,7 @@ export default function App() {
                       <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">
                         SACAS
                       </span>
-                      <span className="font-extrabold text-slate-800 text-xs leading-none">
+                      <span className="font-bold text-slate-800 text-sm leading-none">
                         {trip.volume_saca ?? 0}
                       </span>
                     </div>
@@ -460,7 +514,7 @@ export default function App() {
                       <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">
                         SCUTTLES
                       </span>
-                      <span className="font-extrabold text-slate-800 text-xs leading-none">
+                      <span className="font-bold text-slate-800 text-sm leading-none">
                         {trip.volume_scuttle ?? 0}
                       </span>
                     </div>
@@ -468,7 +522,7 @@ export default function App() {
                       <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">
                         PALLETS
                       </span>
-                      <span className="font-extrabold text-slate-800 text-xs leading-none">
+                      <span className="font-bold text-slate-800 text-sm leading-none">
                         {trip.volume_pallet ?? 0}
                       </span>
                     </div>
@@ -482,7 +536,7 @@ export default function App() {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         TOTAL DE PACOTES:
                       </span>
-                      <span className="text-base font-black text-slate-900">
+                      <span className="text-sm font-bold text-slate-900">
                         {(trip.total_packages || 0).toLocaleString('pt-BR')} pcs
                       </span>
                     </div>
@@ -491,7 +545,7 @@ export default function App() {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         DOCA:
                       </span>
-                      <span className="text-base font-black text-slate-900">
+                      <span className="text-sm font-bold text-slate-900">
                         {trip.dock_number || '-'}
                       </span>
                     </div>
