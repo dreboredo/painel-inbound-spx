@@ -52,6 +52,20 @@ export default function App() {
     setSelectedModality(prev => ({ ...prev, [modality]: !prev[modality] }));
   };
 
+  // Função auxiliar para formatar a data/hora do updated_at
+  const formatTimestamp = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const today = new Date();
+    
+    // Se for do mesmo dia, exibe apenas a hora. Caso contrário, exibe data e hora.
+    const isToday = date.toDateString() === today.toDateString();
+    if (isToday) {
+      return date.toLocaleTimeString('pt-BR');
+    }
+    return `${date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
+
   const fetchTrips = async () => {
     try {
       setLoading(true);
@@ -61,7 +75,10 @@ export default function App() {
 
       if (error) throw error;
 
-      const sortedData = (data || []).sort((a, b) => {
+      const tripsData = data || [];
+
+      // Ordenação das viagens
+      const sortedData = tripsData.sort((a, b) => {
         const priorityA = STATUS_PRIORITY[a.status] || 99;
         const priorityB = STATUS_PRIORITY[b.status] || 99;
 
@@ -73,7 +90,23 @@ export default function App() {
       });
 
       setTrips(sortedData);
-      setLastSync(new Date().toLocaleTimeString('pt-BR'));
+
+      // ==============================================================================
+      // ATUALIZAÇÃO DA ÚLTIMA SYNC BASEADO EM UPDATED_AT
+      // ==============================================================================
+      if (sortedData.length > 0) {
+        // Encontra o registro com a maior/mais recente updated_at
+        const maxUpdatedAt = sortedData.reduce((max, trip) => {
+          if (!trip.updated_at) return max;
+          return !max || new Date(trip.updated_at) > new Date(max) ? trip.updated_at : max;
+        }, null);
+
+        if (maxUpdatedAt) {
+          setLastSync(formatTimestamp(maxUpdatedAt));
+        }
+      } 
+      // Se não houver viagens na busca (tabela zerada no início do dia):
+      // mantemos o valor de lastSync já gravado no estado anterior (se existir).
     } catch (err) {
       console.error('Erro ao buscar viagens:', err.message);
     } finally {
