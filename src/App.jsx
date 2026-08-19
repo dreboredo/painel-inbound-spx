@@ -532,7 +532,7 @@ export default function App() {
                     >
                       {status}:{' '}
                       <strong
-                        className={`text-xs px-1.5 py-0.5 rounded-md transition-all ${
+                        className={`text-sm px-2 py-0.5 rounded-md transition-all ${
                           isActive
                             ? darkMode ? 'font-black text-white bg-slate-800' : 'font-black text-slate-900 bg-slate-100'
                             : darkMode ? 'font-semibold text-slate-500 bg-slate-800/40' : 'font-semibold text-slate-400 bg-slate-100/60'
