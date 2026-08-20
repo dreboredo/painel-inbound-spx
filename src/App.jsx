@@ -10,11 +10,10 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Lista fixa de todas as docas
-const ALL_DOCKS = [
-  'INT01', 'INT02', 'INT03', 'INT04',
-  'EXT.INB01', 'EXT.INB02', 'EXT.INB03', 'EXT.INB04'
-];
+// Lista fixa de todas as docas (internas + separador + externas)
+const DOCKS_INTERNAL = ['INT01', 'INT02', 'INT03', 'INT04', 'INT05', 'INT06'];
+const DOCKS_EXTERNAL = ['EXT.INB01', 'EXT.INB02', 'EXT.INB03', 'EXT.INB04'];
+const ALL_DOCKS = [...DOCKS_INTERNAL, ...DOCKS_EXTERNAL];
 
 // Definição de prioridade de exibição dos status
 const STATUS_PRIORITY = {
@@ -609,7 +608,35 @@ export default function App() {
               Docas:
             </span>
 
-            {ALL_DOCKS.map((dock) => {
+            {/* Docas Internas */}
+            {DOCKS_INTERNAL.map((dock) => {
+              const isOccupied = occupiedDocks.has(dock);
+              return (
+                <div
+                  key={dock}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-all border ${
+                    isOccupied
+                      ? darkMode ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800 font-black' : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30 shadow-sm shadow-emerald-500/10 font-black'
+                      : darkMode ? 'bg-slate-800 text-slate-500 border-slate-700 font-normal' : 'bg-slate-100 text-slate-400 border-slate-200 font-normal'
+                  }`}
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isOccupied
+                        ? 'bg-emerald-400 shadow-[0_0_8px_#10b981] animate-pulse'
+                        : darkMode ? 'bg-slate-600' : 'bg-slate-400'
+                    }`}
+                  ></span>
+                  <span>{dock}</span>
+                </div>
+              );
+            })}
+
+            {/* Barra Simples de Separação entre Docas Internas e Externas */}
+            <div className={`h-5 w-px mx-1 ${darkMode ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+
+            {/* Docas Externas */}
+            {DOCKS_EXTERNAL.map((dock) => {
               const isOccupied = occupiedDocks.has(dock);
               return (
                 <div
